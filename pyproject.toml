@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "system60_modbus_logger"
+authors = [
+  { name = "Killian Murphy", email = "killian.murphy@york.ac.uk" },
+]
+description = "A logging program to capture gas sensor data across all racks in the System60 lab"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS ::MacOS X",
+  "Operating System :: POSIX :: Linux",
+]
+dependencies = [ ]
+dynamic = [ "version" ]
+
+[project.optional-dependencies]
+
+[project.scripts]
