@@ -9,7 +9,7 @@ authors = [
 ]
 description = "A logging program to capture gas sensor data across all racks in the System60 lab"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { file = "LICENSE" }
 classifiers = [
   "Programming Language :: Python :: 3",
@@ -17,7 +17,7 @@ classifiers = [
   "Operating System :: MacOS ::MacOS X",
   "Operating System :: POSIX :: Linux",
 ]
-dependencies = [ ]
+dependencies = [ "minimalmodbus", ]
 dynamic = [ "version" ]
 
 [project.optional-dependencies]
@@ -27,3 +27,5 @@ dynamic = [ "version" ]
 [project.urls]
 Homepage = "https://github.com/Chong-Lab-UoY/system60_modbus_logger"
 Issues = "https://github.com/Chong-Lab-UoY/system60_modbus_logger/issues"
+
+[tool.setuptools_scm]
