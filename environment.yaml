@@ -1,0 +1,13 @@
+name: system60_modbus_logger
+channels:
+  - conda-forge
+dependencies:
+  - python >= 3.11
+  - black
+  - ipython
+  - minimalmodbus
+  - mypy
+  - pip
+  - pip:
+    - build
+  - pylint
