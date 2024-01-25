@@ -2,9 +2,11 @@
 Main entry point for system60_modbus_logger
 """
 import argparse
+import itertools
 import logging
 import os
-import typing
+import struct
+import time
 
 from pymodbus import ModbusException
 from pymodbus.client import ModbusTcpClient
@@ -26,7 +28,7 @@ RACK_IP_ADDRESSES: dict[str, str] = {
 
 def sensor_rack(rack_id: str) -> str:
     """ """
-    if (rack_id not in RACK_IP_ADDRESSES.keys()) and (rack_id != "all"):
+    if (rack_id not in RACK_IP_ADDRESSES) and (rack_id != "all"):
         error_message = (
             f"{rack_id} is an invalid rack ID - "
             "please choose a rack from A - J or 'all'"
@@ -40,17 +42,17 @@ def integer_gte_zero(number: str) -> int:
     """ """
     try:
         converted_number = int(number)
-    except ValueError as exception:
+    except ValueError as _:
         error_message = (
             f"{number} is not an integer - please choose a positive "
-            "integer or 0 for indefinite requests"
+            "integer or -1 for indefinite requests"
         )
         raise argparse.ArgumentTypeError(error_message)
 
-    if not converted_number >= 0:
+    if converted_number < -1:
         error_message = (
             f"{converted_number} is not greater than or equal to zero - "
-            "please choose a positive integer or 0 for indefinite requests"
+            "please choose a positive integer or -1 for indefinite requests"
         )
         raise argparse.ArgumentTypeError(error_message)
     return converted_number
@@ -63,22 +65,24 @@ def potential_output_file(path: str) -> str:
     if os.path.exists(absolute_path):
         if os.path.isfile(absolute_path) and os.access(absolute_path, os.W_OK):
             return absolute_path
-        else:
-            error_message = (
-                f"{absolute_path} is a path to a non-writable file or a "
-                "non-file - please choose a different path for the log file"
-            )
-            raise argparse.ArgumentTypeError(error_message)
-    else:
-        if os.access(os.path.dirname(absolute_path), os.W_OK):
-            return absolute_path
-        else:
-            error_message = (
-                f"The directory {os.path.dirname(absolute_path)} is not "
-                "writeable or doesn't exist - please choose a different "
-                "path for the log file"
-            )
-            raise argparse.ArgumentTypeError(error_message)
+
+        error_message = (
+            f"{absolute_path} is a path to a non-writable file or a "
+            "non-file - please choose a different path for the log file"
+        )
+
+        raise argparse.ArgumentTypeError(error_message)
+
+    if os.access(os.path.dirname(absolute_path), os.W_OK):
+        return absolute_path
+
+    error_message = (
+        f"The directory {os.path.dirname(absolute_path)} is not "
+        "writeable or doesn't exist - please choose a different "
+        "path for the log file"
+    )
+
+    raise argparse.ArgumentTypeError(error_message)
 
 
 def parse_command_line() -> argparse.Namespace:
@@ -120,24 +124,41 @@ if __name__ == "__main__":
 
     COMMAND_LINE_ARGUMENTS: argparse.Namespace = parse_command_line()
 
-    CLIENT: ModbusTcpClient = ModbusTcpClient(RACK_IP_ADDRESSES["A"], port=502)
-    CLIENT.connect()
+    for REQUEST_ID in itertools.count(start=0):
+        if REQUEST_ID == COMMAND_LINE_ARGUMENTS.number_of_requests:
+            break
 
-    try:
-        RESPONSE: ModbusResponse = CLIENT.read_input_registers(0, 48)
-    except ModbusException as EXCEPTION:
-        logging.error(" Exception in pymodbus %s", EXCEPTION)
-        raise EXCEPTION
-
-    if RESPONSE.isError():
-        logging.error(" Request for input registers 0-47 returned an error")
-        raise ModbusException(
-            "Request for input register 0-47 returned an error"
+        CLIENT: ModbusTcpClient = ModbusTcpClient(
+            RACK_IP_ADDRESSES[COMMAND_LINE_ARGUMENTS.rack_to_log], port=502
         )
 
-    logging.info(
-        " Input registers 0 - 47 are [ %s ]",
-        ", ".join(map(str, RESPONSE.registers)),
-    )
+        try:
+            CLIENT.connect()
+        except ConnectionError as EXCEPTION:
+            logging.error(
+                " Connecting to rack %s on %s failed",
+                COMMAND_LINE_ARGUMENTS.rack_to_log,
+                RACK_IP_ADDRESSES[COMMAND_LINE_ARGUMENTS.rack_to_log],
+            )
+            continue
 
-    CLIENT.close()
+        try:
+            RESPONSE: ModbusResponse = CLIENT.read_input_registers(0, 48)
+        except ModbusException as EXCEPTION:
+            logging.error(" Exception in pymodbus %s", EXCEPTION)
+            continue
+
+        if RESPONSE.isError():
+            logging.error(
+                " Request for input registers 0-47 from rack %s returned an error",
+                COMMAND_LINE_ARGUMENTS.rack_to_log,
+            )
+
+        logging.info(
+            " Input registers 0 - 47 are [ %s ]",
+            ", ".join(map(str, RESPONSE.registers)),
+        )
+
+        CLIENT.close()
+
+        time.sleep(1)
