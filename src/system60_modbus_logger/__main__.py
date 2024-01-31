@@ -115,6 +115,49 @@ def parse_command_line() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def connect_to_rack(rack_id: str) -> ModbusTcpClient:
+    """ """
+    client: ModbusTcpClient = ModbusTcpClient(
+        RACK_TO_IP_ADDRESS[rack_id], port=502
+    )
+
+    if not client.connect():
+        error_message: str = " Connecting to rack %s on %s failed"
+        logging.error(error_message, rack_id, RACK_TO_IP_ADDRESS[rack_id])
+        raise ConnectionError(
+            error_message % (rack_id, RACK_TO_IP_ADDRESS[rack_id])
+        )
+
+    return client
+
+
+def get_registers_from_rack(modbus_client: ModbusTcpClient) -> list:
+    """ """
+    rack_ip_address: str = modbus_client.comm_params.host
+    rack_id: str = IP_ADDRESS_TO_RACK[rack_ip_address]
+
+    try:
+        response: ModbusResponse = modbus_client.read_input_registers(0, 48)
+    except ModbusException as exception:
+        read_error_message: str = " Reading registers from rack %s on %s failed"
+        logging.error(read_error_message, rack_id, rack_ip_address)
+        raise ModbusException(
+            read_error_message % (rack_id, rack_ip_address)
+        ) from exception
+
+    if response.isError():
+        request_error_message: str = (
+            " Request for input registers 0 - 47 from rack %s on %s"
+            " returned an error"
+        )
+        logging.error(request_error_message, rack_id, rack_ip_address)
+        raise ModbusException(
+            request_error_message % (rack_id, rack_ip_address)
+        )
+
+    return response.registers
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
