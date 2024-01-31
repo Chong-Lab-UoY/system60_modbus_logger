@@ -163,49 +163,60 @@ if __name__ == "__main__":
 
     COMMAND_LINE_ARGUMENTS: argparse.Namespace = parse_command_line()
 
+    RACKS_TO_LOG: list[str] = (
+        list(RACK_ID_TO_IP_ADDRESS.keys())
+        if (COMMAND_LINE_ARGUMENTS.rack_to_log == "all")
+        else [
+            COMMAND_LINE_ARGUMENTS.rack_to_log,
+        ]
+    )
+
     for REQUEST_ID in itertools.count(start=0):
         if REQUEST_ID == COMMAND_LINE_ARGUMENTS.number_of_requests:
             break
-        try:
-            CONNECTION: ModbusTcpClient = connect_to_rack(
-                COMMAND_LINE_ARGUMENTS.rack_to_log
+
+        for RACK_ID in RACKS_TO_LOG:
+            try:
+                CONNECTION: ModbusTcpClient = connect_to_rack(
+                    COMMAND_LINE_ARGUMENTS.rack_to_log
+                )
+            except ConnectionError as EXCEPTION:
+                continue
+
+            TIMESTAMP: int = int(
+                datetime.datetime.timestamp(
+                    datetime.datetime.now(datetime.timezone.utc)
+                )
             )
-        except ConnectionError as EXCEPTION:
-            continue
 
-        TIMESTAMP: int = int(
-            datetime.datetime.timestamp(
-                datetime.datetime.now(datetime.timezone.utc)
+            try:
+                REGISTERS: list = get_registers_from_rack(CONNECTION)
+                CONNECTION.close()
+            except ModbusException as EXCEPTION:
+                CONNECTION.close()
+                continue
+
+            logging.info(
+                " Input registers 0 - 47 are [ %s ]",
+                ", ".join(map(str, REGISTERS)),
             )
-        )
 
-        try:
-            REGISTERS: list = get_registers_from_rack(CONNECTION)
-            CONNECTION.close()
-        except ModbusException as EXCEPTION:
-            CONNECTION.close()
-            continue
+            VALUES = [
+                struct.unpack("f", struct.pack("HH", MSW, LSW))[0]
+                for MSW, LSW in zip(REGISTERS[::2], REGISTERS[1::2])
+            ]
 
-        logging.info(
-            " Input registers 0 - 47 are [ %s ]",
-            ", ".join(map(str, REGISTERS)),
-        )
+            logging.info(
+                " Values are [ %s ]",
+                ", ".join(map(str, VALUES)),
+            )
 
-        VALUES = [
-            struct.unpack("f", struct.pack("HH", MSW, LSW))[0]
-            for MSW, LSW in zip(REGISTERS[::2], REGISTERS[1::2])
-        ]
+            VALUES.insert(0, TIMESTAMP)
+            VALUES.insert(1, RACK_ID)
 
-        logging.info(
-            " Values are [ %s ]",
-            ", ".join(map(str, VALUES)),
-        )
+            logging.info(
+                "%s",
+                ",".join(map(str, VALUES)),
+            )
 
-        VALUES.insert(0, TIMESTAMP)
-
-        logging.info(
-            "%s",
-            ",".join(map(str, VALUES)),
-        )
-
-        time.sleep(1)
+            time.sleep(1)
