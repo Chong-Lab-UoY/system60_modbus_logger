@@ -2,6 +2,7 @@
 Main entry point for system60_modbus_logger
 """
 import argparse
+import datetime
 import itertools
 import logging
 import os
@@ -142,6 +143,12 @@ if __name__ == "__main__":
             )
             continue
 
+        TIMESTAMP: int = int(
+            datetime.datetime.timestamp(
+                datetime.datetime.now(datetime.timezone.utc)
+            )
+        )
+
         try:
             RESPONSE: ModbusResponse = CLIENT.read_input_registers(0, 48)
         except ModbusException as EXCEPTION:
@@ -159,6 +166,11 @@ if __name__ == "__main__":
             ", ".join(map(str, RESPONSE.registers)),
         )
 
-        CLIENT.close()
+        VALUES.insert(0, TIMESTAMP)
+
+        logging.info(
+            "%s",
+            ",".join(map(str, VALUES)),
+        )
 
         time.sleep(1)
