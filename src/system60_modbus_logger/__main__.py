@@ -166,19 +166,11 @@ if __name__ == "__main__":
     for REQUEST_ID in itertools.count(start=0):
         if REQUEST_ID == COMMAND_LINE_ARGUMENTS.number_of_requests:
             break
-
-        CLIENT: ModbusTcpClient = ModbusTcpClient(
-            RACK_IP_ADDRESSES[COMMAND_LINE_ARGUMENTS.rack_to_log], port=502
-        )
-
         try:
-            CLIENT.connect()
-        except ConnectionError as EXCEPTION:
-            logging.error(
-                " Connecting to rack %s on %s failed",
-                COMMAND_LINE_ARGUMENTS.rack_to_log,
-                RACK_IP_ADDRESSES[COMMAND_LINE_ARGUMENTS.rack_to_log],
+            CONNECTION: ModbusTcpClient = connect_to_rack(
+                COMMAND_LINE_ARGUMENTS.rack_to_log
             )
+        except ConnectionError as EXCEPTION:
             continue
 
         TIMESTAMP: int = int(
@@ -188,16 +180,11 @@ if __name__ == "__main__":
         )
 
         try:
-            RESPONSE: ModbusResponse = CLIENT.read_input_registers(0, 48)
+            REGISTERS: list = get_registers_from_rack(CONNECTION)
+            CONNECTION.close()
         except ModbusException as EXCEPTION:
-            logging.error(" Exception in pymodbus %s", EXCEPTION)
+            CONNECTION.close()
             continue
-
-        if RESPONSE.isError():
-            logging.error(
-                " Request for input registers 0-47 from rack %s returned an error",
-                COMMAND_LINE_ARGUMENTS.rack_to_log,
-            )
 
         logging.info(
             " Input registers 0 - 47 are [ %s ]",
