@@ -188,7 +188,17 @@ if __name__ == "__main__":
 
         logging.info(
             " Input registers 0 - 47 are [ %s ]",
-            ", ".join(map(str, RESPONSE.registers)),
+            ", ".join(map(str, REGISTERS)),
+        )
+
+        VALUES = [
+            struct.unpack("f", struct.pack("HH", MSW, LSW))[0]
+            for MSW, LSW in zip(REGISTERS[::2], REGISTERS[1::2])
+        ]
+
+        logging.info(
+            " Values are [ %s ]",
+            ", ".join(map(str, VALUES)),
         )
 
         VALUES.insert(0, TIMESTAMP)
