@@ -13,18 +13,12 @@ from pymodbus import ModbusException
 from pymodbus.client import ModbusTcpClient
 from pymodbus.pdu import ModbusResponse
 
-RACK_IP_ADDRESSES: dict[str, str] = {
-    "A": "192.168.1.160",
-    "B": "192.168.1.161",
-    "C": "192.168.1.162",
-    "D": "192.168.1.163",
-    "E": "192.168.1.164",
-    "F": "192.168.1.165",
-    "G": "192.168.1.166",
-    "H": "192.168.1.167",
-    "I": "192.168.1.168",
-    "J": "192.168.1.169",
-}
+
+RACK_IP_ADDRESSES = [f"192.168.1.{x}" for x in range(160, 170)]
+RACK_IDS = list(map(chr, range(ord("A"), ord("I") + 1)))
+
+RACK_TO_IP_ADDRESS = dict(zip(RACK_IDS, RACK_IP_ADDRESSES))
+IP_ADDRESS_TO_RACK = dict(zip(RACK_IP_ADDRESSES, RACK_IDS))
 
 
 def sensor_rack(rack_id: str) -> str:
