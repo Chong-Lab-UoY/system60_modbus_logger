@@ -46,7 +46,7 @@ def integer_gte_zero(number: str) -> int:
 
     if converted_number < -1:
         error_message = (
-            f"{converted_number} is not greater than or equal to zero - "
+            f"{converted_number} is not a valid value - "
             "please choose a positive integer or -1 for indefinite requests"
         )
         raise argparse.ArgumentTypeError(error_message)
@@ -81,6 +81,7 @@ def potential_output_file(path: str) -> str:
 
 
 def parse_command_line() -> argparse.Namespace:
+    """ """
     description_text = ""
     epilog_text = ""
 
