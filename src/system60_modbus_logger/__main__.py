@@ -17,13 +17,13 @@ from pymodbus.pdu import ModbusResponse
 RACK_IP_ADDRESSES = [f"192.168.1.{x}" for x in range(160, 170)]
 RACK_IDS = list(map(chr, range(ord("A"), ord("I") + 1)))
 
-RACK_TO_IP_ADDRESS = dict(zip(RACK_IDS, RACK_IP_ADDRESSES))
-IP_ADDRESS_TO_RACK = dict(zip(RACK_IP_ADDRESSES, RACK_IDS))
+RACK_ID_TO_IP_ADDRESS = dict(zip(RACK_IDS, RACK_IP_ADDRESSES))
+IP_ADDRESS_TO_RACK_ID = dict(zip(RACK_IP_ADDRESSES, RACK_IDS))
 
 
 def sensor_rack(rack_id: str) -> str:
     """ """
-    if (rack_id not in RACK_TO_IP_ADDRESS) and (rack_id != "all"):
+    if (rack_id not in RACK_ID_TO_IP_ADDRESS) and (rack_id != "all"):
         error_message = (
             f"{rack_id} is an invalid rack ID - "
             "please choose a rack from A - J or 'all'"
@@ -118,14 +118,14 @@ def parse_command_line() -> argparse.Namespace:
 def connect_to_rack(rack_id: str) -> ModbusTcpClient:
     """ """
     client: ModbusTcpClient = ModbusTcpClient(
-        RACK_TO_IP_ADDRESS[rack_id], port=502
+        RACK_ID_TO_IP_ADDRESS[rack_id], port=502
     )
 
     if not client.connect():
         error_message: str = " Connecting to rack %s on %s failed"
-        logging.error(error_message, rack_id, RACK_TO_IP_ADDRESS[rack_id])
+        logging.error(error_message, rack_id, RACK_ID_TO_IP_ADDRESS[rack_id])
         raise ConnectionError(
-            error_message % (rack_id, RACK_TO_IP_ADDRESS[rack_id])
+            error_message % (rack_id, RACK_ID_TO_IP_ADDRESS[rack_id])
         )
 
     return client
@@ -134,7 +134,7 @@ def connect_to_rack(rack_id: str) -> ModbusTcpClient:
 def get_registers_from_rack(modbus_client: ModbusTcpClient) -> list:
     """ """
     rack_ip_address: str = modbus_client.comm_params.host
-    rack_id: str = IP_ADDRESS_TO_RACK[rack_ip_address]
+    rack_id: str = IP_ADDRESS_TO_RACK_ID[rack_ip_address]
 
     try:
         response: ModbusResponse = modbus_client.read_input_registers(0, 48)
