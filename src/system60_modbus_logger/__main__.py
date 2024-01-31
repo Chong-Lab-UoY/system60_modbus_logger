@@ -23,7 +23,7 @@ IP_ADDRESS_TO_RACK = dict(zip(RACK_IP_ADDRESSES, RACK_IDS))
 
 def sensor_rack(rack_id: str) -> str:
     """ """
-    if (rack_id not in RACK_IP_ADDRESSES) and (rack_id != "all"):
+    if (rack_id not in RACK_TO_IP_ADDRESS) and (rack_id != "all"):
         error_message = (
             f"{rack_id} is an invalid rack ID - "
             "please choose a rack from A - J or 'all'"
