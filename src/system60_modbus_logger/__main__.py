@@ -106,6 +106,13 @@ def parse_command_line() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "logging_interval",
+        type=integer_gte_minus_one,
+        metavar="logging_interval",
+        help="The interval, in seconds, between requests for data from a rack",
+    )
+
+    parser.add_argument(
         "log_file",
         type=potential_output_file,
         metavar="log_file",
@@ -224,4 +231,4 @@ if __name__ == "__main__":
             ) as LOG_FILE:
                 LOG_FILE.write(",".join(map(str, VALUES)) + "\n")
 
-            time.sleep(1)
+            time.sleep(COMMAND_LINE_ARGUMENTS.logging_interval)
