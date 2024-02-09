@@ -222,6 +222,6 @@ if __name__ == "__main__":
             with open(
                 COMMAND_LINE_ARGUMENTS.log_file, "a", encoding="utf-8"
             ) as LOG_FILE:
-                LOG_FILE.write(",".join(map(str, VALUES)))
+                LOG_FILE.write(",".join(map(str, VALUES)) + "\n")
 
             time.sleep(1)
