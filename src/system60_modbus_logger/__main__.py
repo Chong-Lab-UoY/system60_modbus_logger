@@ -33,7 +33,7 @@ def sensor_rack(rack_id: str) -> str:
     return rack_id
 
 
-def integer_gte_zero(number: str) -> int:
+def integer_gte_minus_one(number: str) -> int:
     """ """
     try:
         converted_number = int(number)
@@ -100,7 +100,7 @@ def parse_command_line() -> argparse.Namespace:
 
     parser.add_argument(
         "number_of_requests",
-        type=integer_gte_zero,
+        type=integer_gte_minus_one,
         metavar="number_of_requests",
         help="The number of data requests to make of the sensor rack(s)",
     )
