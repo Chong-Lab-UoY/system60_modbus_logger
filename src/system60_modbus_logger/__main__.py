@@ -209,7 +209,7 @@ if __name__ == "__main__":
             )
 
             VALUES = [
-                struct.unpack("f", struct.pack("HH", LSW, MSW))[0]
+                struct.unpack("f", struct.pack("HH", MSW, LSW))[0]
                 for MSW, LSW in zip(REGISTERS[::2], REGISTERS[1::2])
             ]
 
