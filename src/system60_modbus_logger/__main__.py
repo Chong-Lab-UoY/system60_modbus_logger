@@ -185,7 +185,7 @@ if __name__ == "__main__":
         for RACK_ID in RACKS_TO_LOG:
             try:
                 CONNECTION: ModbusTcpClient = connect_to_rack(
-                    COMMAND_LINE_ARGUMENTS.rack_to_log
+                        RACK_ID
                 )
             except ConnectionError as EXCEPTION:
                 continue
